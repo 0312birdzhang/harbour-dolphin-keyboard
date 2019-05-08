@@ -46,28 +46,30 @@ KeyBase {
     property string nativeAccents // accents considered native to the written language. not rendered.
     property string nativeAccentsShifted
     property bool fixedWidth
-    property alias useBoldFont: keyText.font.bold
-    property alias  _keyText: keyText.text
+    property alias useBoldFont: textItem.font.bold
+    property alias pixelSize: textItem.font.pixelSize
+    property alias fontSizeMode: textItem.fontSizeMode
+    property alias textAnchors: textItem.anchors
 
     keyType: KeyType.CharacterKey
-    text: keyText.text
+    text: keyText
+    keyText: attributes.inSymView && symView.length > 0 ? (attributes.inSymView2 ? symView2 : symView)
+                                                        : (attributes.isShifted ? captionShifted : caption)
 
     Text {
-        id: keyText
-        anchors.centerIn: parent
-        anchors.horizontalCenterOffset: (leftPadding - rightPadding) / 2
+        id: textItem
+        anchors.fill: parent
+        anchors.leftMargin: leftPadding
+        anchors.rightMargin: rightPadding
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeLarge
         color: pressed ? Theme.highlightColor : Theme.primaryColor
-        text: attributes.inSymView && symView.length > 0 ? (attributes.inSymView2 ? symView2 : symView)
-                                                         : (attributes.isShifted ? captionShifted : caption)
+        text: aCharKey.keyText
     }
 
-    Image {
-        source: "graphic-keyboard-highlight-top.png"
-        anchors.right: parent.right
+    KeySeparator {
         visible: (separator === SeparatorState.AutomaticSeparator && implicitSeparator)
                  || separator === SeparatorState.VisibleSeparator
     }

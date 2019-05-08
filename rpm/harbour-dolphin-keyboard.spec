@@ -63,7 +63,19 @@ desktop-file-install --delete-original       \
    %{buildroot}%{_datadir}/applications/*.desktop
 
 %post
-systemctl-user restart lipstick.service
+# >> post
+systemctl-user restart maliit-server || true
+
+# << post
+
+%postun
+# >> postun
+systemctl-user restart maliit-server || true
+# << postun
+
+%clean
+rm -rf %{buildroot}
+
 
 %files
 %defattr(755,nemo,nemo,755)
@@ -73,7 +85,7 @@ systemctl-user restart lipstick.service
 %{_datadir}/maliit/plugins/com/jolla/dolphin/
 %{_datadir}/maliit/plugins/com/jolla/layouts/
 %{_datadir}/fonts/symbola/
-%{_bindir}/harbour-dolphin-settings/
+%{_bindir}/harbour-dolphin-settings
 %{_datadir}/harbour-dolphin-settings/
 %{_datadir}/applications/harbour-dolphin-settings.desktop
 %{_datadir}/icons/hicolor/86x86/apps/harbour-dolphin-settings.png

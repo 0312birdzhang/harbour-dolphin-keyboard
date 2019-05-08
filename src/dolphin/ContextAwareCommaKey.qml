@@ -7,9 +7,9 @@ CharacterKey {
              ? "/"
              : MInputMethodQuick.contentType === Maliit.EmailContentType
                ? "@"
-               : "，"
+               : ","
     captionShifted: caption
-    symView: "，"
+    symView: ","
     symView2: ","
     implicitWidth: punctuationKeyWidth
     fixedWidth: !splitActive

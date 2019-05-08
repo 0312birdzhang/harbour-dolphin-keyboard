@@ -4,11 +4,7 @@
 import QtQuick 2.0
 
 CharacterKey {
-    property bool landscape
-
     captionShifted: caption
     showPopper: false
     height: geometry.keyHeightPortrait // not changing
-    width: landscape ? geometry.keyboardWidthLandscape / 10
-                     : geometry.keyboardWidthPortrait / 4
 }

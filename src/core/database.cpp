@@ -10,12 +10,6 @@
 #include <QDebug>
 #include <QStringList>
 
-
-Database::~Database()
-{
-    
-}
-
 Database::Database(QQuickItem *parent)
     : QQuickItem(parent)
 {

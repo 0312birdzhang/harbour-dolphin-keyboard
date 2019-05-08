@@ -34,10 +34,11 @@ import harbour.dolphin.keyboard 1.0
 import "../dolphin"
 
 KeyboardLayout {
-    id: layout
+    id: strokeLayout
     splitSupported: true
+    type: "stroke"
     property int keyWidth: ( width - shiftKeyWidth ) / 12
-    property bool inStrokeView: ( !xt9 && !keyboard.inSymView && !keyboard.inSymView2 )
+    property bool inStrokeView: !xt9 && !keyboard.inSymView && !keyboard.inSymView2
     primaryHandler: StrokeHandler {  }
     secondaryHandler: Xt9Handler {  }
 

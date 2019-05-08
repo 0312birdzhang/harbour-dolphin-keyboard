@@ -8,12 +8,13 @@ QtObject {
     // FIXME: need different scale ratio for landscape in case aspect ratio changes, now assuming 16:9
     property bool isLargeScreen: screen.sizeCategory > Screen.Medium
     property real scaleRatio: isLargeScreen ? screen.width / 580 : screen.width / 480
+    property real verticalScale: isLargeScreen ? screen.width / 768 : scaleRatio
 
     property int keyboardWidthLandscape: screen.height
     property int keyboardWidthPortrait: screen.width
 
-    property int keyHeightLandscape: 58*scaleRatio
-    property int keyHeightPortrait: 80*scaleRatio
+    property int keyHeightLandscape: isLargeScreen ? keyHeightPortrait : 58*verticalScale
+    property int keyHeightPortrait: 80*verticalScale
     property int keyRadius: 4*scaleRatio
 
     property int functionKeyWidthLandscape: 145*scaleRatio
@@ -34,8 +35,8 @@ QtObject {
 
     property int middleBarWidth: keyboardWidthLandscape / 4
 
-    property int popperHeight: 120*scaleRatio
-    property int popperWidth: 80*scaleRatio
+    property int popperHeight: isLargeScreen ? 99*scaleRatio : 120*scaleRatio
+    property int popperWidth: isLargeScreen ? 66*scaleRatio : 80*scaleRatio
     property int popperRadius: 10*scaleRatio
     property int popperFontSize: 56*scaleRatio
     property int popperMargin: 2
@@ -46,14 +47,14 @@ QtObject {
     property int accentPopperCellWidth: 47*scaleRatio
     property int accentPopperMargin: (popperWidth-accentPopperCellWidth) * .5 - 1
 
-    property int languageSelectionTouchDelta: 35*scaleRatio
+    property int languageSelectionTouchDelta: isLargeScreen ? 20*scaleRatio : 35*scaleRatio
     property int languageSelectionInitialDeltaSquared: 20*20*scaleRatio
     property int languageSelectionCellMargin: 15*scaleRatio
     property int languageSelectionPopupMaxWidth: isLargeScreen ? screen.width * .8 : screen.height * .75
     property int languageSelectionPopupContentMargins: 40*scaleRatio
 
     property int hwrLineWidth: 7*Theme.pixelRatio
-    property int hwrCanvasHeight: 300*scaleRatio
+    property int hwrCanvasHeight: isLargeScreen ? 240*scaleRatio : 300*scaleRatio
     property int hwrSampleThresholdSquared: 4*4*scaleRatio
     property int hwrPastePreviewWidth: 100*scaleRatio
 }

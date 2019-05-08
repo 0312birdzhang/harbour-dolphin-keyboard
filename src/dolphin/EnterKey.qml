@@ -37,15 +37,8 @@ FunctionKey {
     caption: !chineseOverride ? MInputMethodQuick.actionKeyOverride.label : "输入" // <= "enter"
     key: Qt.Key_Return
     enabled: !chineseOverride ? MInputMethodQuick.actionKeyOverride.enabled : true
-    implicitWidth: shiftKeyWidth
+    implicitWidth: functionKeyWidth
 
-    Rectangle {
-        color: parent.pressed ? Theme.highlightBackgroundColor : Theme.primaryColor
-        opacity: parent.pressed ? 0.6
+    background.opacity: pressed ? 0.6
                                 : MInputMethodQuick.actionKeyOverride.highlighted ? 0.4 : 0.17
-        radius: geometry.keyRadius
-
-        anchors.fill: parent
-        anchors.margins: Theme.paddingMedium
-    }
 }

@@ -42,7 +42,7 @@ Page {
         }
     }*/
 
-    RemorseItem { id: remorse }
+    RemorsePopup { id: remorse }
 
     SilicaFlickable {
         anchors.fill: parent
@@ -60,22 +60,20 @@ Page {
             id: column
             width: parent.width
             anchors.top: header.bottom
-            spacing: 16
+            spacing: Theme.paddingMedium
 
-            Heading { text: qsTr("Testing TextField") }
+            SectionHeader { text: qsTr("Testing TextField") }
 
-            /*Button {
-                height: Theme.itemSizeSmall
+            TextField {
                 width: parent.width
-                text: "Test"
-            }*/
+                placeholderText: qsTr("Enter something here")
+            }
 
-            BackgroundItem {
-
-                width: parent.width
-                Label { anchors.centerIn: parent; text: qsTr("Restart Keyboard Service") }
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Restart Keyboard Service")
                 onClicked: {
-                    remorse.execute(column, qsTr("Processing..."), function() { config.restart() }, 2000 )
+                    remorse.execute(qsTr("Processing..."), function() { config.restart() }, 2000 )
                 }
             }
 
@@ -87,18 +85,13 @@ Page {
                 text: qsTr("* All settings require restart to take effect")
             }
 
-            Label {
-                anchors.right: parent.right
-                anchors.rightMargin: Theme.paddingLarge
-                color: Theme.highlightColor
-                font.pixelSize: Theme.fontSizeSmall
+            SectionHeader {
                 text: qsTr("Appearance Settings")
             }
 
 
             Slider {
                 width: parent.width
-                height: 128
                 minimumValue: 0.6
                 maximumValue: 1.6
                 stepSize: 0.08
@@ -112,7 +105,6 @@ Page {
 
             Slider {
                 width: parent.width
-                height: 128
                 minimumValue: 0
                 maximumValue: 1
                 stepSize: 0.2
@@ -124,53 +116,58 @@ Page {
                 }
             }
 
-            Heading { text: qsTr("Background Picture ( /home/nemo/Pictures/ )") }
+//            SectionHeader { text: qsTr("Background Picture ( /home/nemo/Pictures/ )") }
 
-            GridView {
-                id: background
-                width: parent.width
-                height: 320
-                cellHeight: parent.width / 3
-                cellWidth: cellHeight
-                clip: true
-                highlightFollowsCurrentItem: true
-                focus: true
+//            Item{
+//                width: parent.width
+//                height: Theme.itemSizeMedium
+//            }
 
-                model: FolderListModel {
-                    id: folderModel
-                    folder: "/home/nemo/Pictures/"
-                    showDirs: false
-                    showOnlyReadable: true
-                    nameFilters: ["*.jpg", "*.png"]
-                }
+//            GridView {
+//                id: background
+//                width: parent.width
+//                height: parent.width/3
+//                cellHeight: parent.width / 3
+//                cellWidth: cellHeight
+//                clip: true
+//                highlightFollowsCurrentItem: true
+//                focus: true
 
-                highlight: Component {
-                    Rectangle {
-                        width: background.cellWidth
-                        height: width
-                        color: Theme.highlightColor
-                        opacity: 0.4
-                    }
-                }
+//                model: FolderListModel {
+//                    id: folderModel
+//                    folder: "/home/nemo/Pictures/"
+//                    showDirs: false
+//                    showOnlyReadable: true
+//                    nameFilters: ["*.jpg", "*.png"]
+//                }
 
-                delegate: Image {
-                    width: background.cellWidth
-                    height: width
-                    fillMode: Image.PreserveAspectCrop
-                    cache: true
-                    asynchronous: true
-                    smooth: false
-                    source: "/home/nemo/Pictures/" + fileName
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: config.save("ui-background", parent.source)
-                    }
+//                highlight: Component {
+//                    Rectangle {
+//                        width: background.cellWidth
+//                        height: width
+//                        color: Theme.highlightColor
+//                        opacity: 0.4
+//                    }
+//                }
 
-                }
-            }
+//                delegate: Image {
+//                    width: background.cellWidth
+//                    height: width
+//                    fillMode: Image.PreserveAspectCrop
+//                    cache: true
+//                    asynchronous: true
+//                    smooth: false
+//                    source: "/home/nemo/Pictures/" + fileName
+//                    MouseArea {
+//                        anchors.fill: parent
+//                        onClicked: config.save("ui-background", parent.source)
+//                    }
+
+//                }
+//            }
 
 
-            Heading { text: qsTr("General Typing Settings") }
+            SectionHeader { text: qsTr("General Typing Settings") }
 
             TextSwitch {
                 text: qsTr("English Keyboard As Primary")
@@ -201,7 +198,7 @@ Page {
             }
 
 
-            Heading { text: qsTr("Database Settings") }
+            SectionHeader { text: qsTr("Database Settings") }
 
             TextSwitch {
                 text: qsTr("Dynamic Adjust Frequent Words")
@@ -217,7 +214,7 @@ Page {
                 onCheckedChanged: checked? config.save("word", 1): config.save("word", 0)
             }
 
-            Heading { text: qsTr("Widgets Settings") }
+            SectionHeader { text: qsTr("Widgets Settings") }
 
             ComboBox {
                 width: parent.width
@@ -235,13 +232,13 @@ Page {
                 }
             }
 
-            Heading { text: qsTr("Quick & CangJie Settings") }
+            SectionHeader { text: qsTr("Quick & CangJie Settings") }
 
 
-            Heading { text: qsTr("Wubi Settings") }
+            SectionHeader { text: qsTr("Wubi Settings") }
 
 
-            Heading { text: qsTr("Donation") }
+            SectionHeader { text: qsTr("Donation") }
 
 
             BackgroundItem {

@@ -33,16 +33,7 @@ import Sailfish.Silica 1.0
 import com.meego.maliitquick 1.0
 
 CloseGestureArea {
-    property alias backgroundOpacity: background.opacity
-
     height: Theme.itemSizeSmall
     threshold: Math.max(keyboard.height*.3, Theme.itemSizeSmall)
     onTriggered: MInputMethodQuick.userHide()
-
-    Rectangle {
-        id: background
-        anchors.fill: parent
-        color: Theme.highlightBackgroundColor
-        opacity: .15
-    }
 }

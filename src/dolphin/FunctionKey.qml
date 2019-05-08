@@ -39,11 +39,22 @@ KeyBase {
     property int sourceWidth: -1
     property int sourceHeight: -1
     property bool separator
+    property alias background: backgroundItem
 
     keyType: KeyType.FunctionKey
+    leftPadding: backgroundItem.anchors.margins
+    rightPadding: backgroundItem.anchors.margins
     opacity: enabled ? (pressed ? 0.6 : 1.0)
                      : 0.3
     showPopper: false
+
+    Rectangle {
+        id: backgroundItem
+        color: parent.pressed ? Theme.highlightBackgroundColor : Theme.primaryColor
+        opacity: parent.pressed ? 0.6 : 0.17
+        radius: geometry.keyRadius
+        anchors { fill: parent; margins: Theme.paddingMedium }
+    }
 
     Image {
         id: image
@@ -52,8 +63,11 @@ KeyBase {
     }
 
     Text {
+        id: textItem
         anchors.centerIn: parent
-        anchors.horizontalCenterOffset: (leftPadding - rightPadding) / 2
+        anchors.horizontalCenterOffset: Math.round((leftPadding - rightPadding) / 2)
+        width: parent.width - leftPadding - rightPadding - 4
+        fontSizeMode: Text.HorizontalFit
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         font.pixelSize: Theme.fontSizeMedium
@@ -62,9 +76,7 @@ KeyBase {
         text: parent.caption
     }
 
-    Image {
-        source: "graphic-keyboard-highlight-top.png"
-        anchors.right: parent.right
+    KeySeparator {
         visible: separator
     }
 }

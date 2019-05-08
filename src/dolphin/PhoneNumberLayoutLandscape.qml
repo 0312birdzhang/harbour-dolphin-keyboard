@@ -3,6 +3,7 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0 as Silica
+import com.jolla.keyboard 1.0
 
 KeyboardLayout {
     id: main
@@ -78,7 +79,7 @@ KeyboardLayout {
             height: geometry.keyHeightPortrait
             width: main.width / 10
             showPopper: false
-            separator: false
+            separator: SeparatorState.HiddenSeparator
         }
     }
 
@@ -86,7 +87,7 @@ KeyboardLayout {
         x: 3 * (main.width / 10)
 
         NumberKey {
-            landscape: true
+            width: main.width / 10
             enabled: Silica.Clipboard.hasText
             key: Qt.Key_Paste
             opacity: enabled ? (pressed ? 0.6 : 1.0)
@@ -117,7 +118,7 @@ KeyboardLayout {
             height: geometry.keyHeightPortrait
             width: main.width / 10
             showPopper: false
-            separator: false
+            separator: SeparatorState.HiddenSeparator
         }
         BackspaceKey {
             width: main.width / 10

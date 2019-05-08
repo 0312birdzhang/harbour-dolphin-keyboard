@@ -1,5 +1,4 @@
 import QtQuick 2.0
-import QtQuick 2.0
 import com.meego.maliitquick 1.0
 import com.jolla.xt9 1.0
 import Sailfish.Silica 1.0
@@ -9,6 +8,7 @@ import "../dolphin"
 
 InputHandler {
     id: inputHandler
+
     property int candidateSpaceIndex: -1
     property string preedit
 
@@ -19,7 +19,7 @@ InputHandler {
     Xt9EngineThread {
         id: thread
         // note: also china language codes being set with this, assume xt9 model just ignores such
-        language: "EN"
+        language: layoutRow.layout ? layoutRow.layout.languageCode : ""
 
         property int shiftState: keyboard.isShifted ? (keyboard.isShiftLocked ? Xt9Model.ShiftLocked
                                                                               : Xt9Model.ShiftLatched)
@@ -32,6 +32,30 @@ InputHandler {
             inputHandler.preedit = oldPreedit.substr(word.length, oldPreedit.length-word.length)
             if (inputHandler.preedit !== "") {
                 MInputMethodQuick.sendPreedit(inputHandler.preedit)
+            }
+        }
+    }
+
+    Component {
+        id: pasteComponent
+        PasteButton {
+            onClicked: {
+                inputHandler.commit(inputHandler.preedit)
+                MInputMethodQuick.sendCommit(Clipboard.text)
+                keyboard.expandedPaste = false
+            }
+        }
+    }
+
+    Component {
+        id: verticalPasteComponent
+        PasteButton {
+            width: parent.width
+            height: geometry.keyHeightLandscape
+
+            onClicked: {
+                inputHandler.commit(inputHandler.preedit)
+                MInputMethodQuick.sendCommit(Clipboard.text)
             }
         }
     }
@@ -51,20 +75,12 @@ InputHandler {
     topItem: Component {
         TopItem {
             SilicaListView {
-                id: container
+                id: predictionList
 
                 model: thread.engine
                 orientation: ListView.Horizontal
                 anchors.fill: parent
-
-                //Dolpin Keyboard
-                header: Component {
-                    Toolbar {
-                        height: 80
-                        count: preedit.length
-                    }
-                }
-
+                header: pasteComponent
                 boundsBehavior: !keyboard.expandedPaste && Clipboard.hasText ? Flickable.DragOverBounds : Flickable.StopAtBounds
 
                 onDraggingChanged: {
@@ -89,20 +105,10 @@ InputHandler {
                     }
                 }
 
-                Timer {
-                    id: timer
-                    interval: 16
-                    onTriggered: container.positionViewAtBeginning()
-                }
-
-                onContentHeightChanged: {
-                    timer.restart()
-                }
-
                 Connections {
                     target: thread.engine
                     onPredictionsChanged: {
-                        container.positionViewAtBeginning()
+                        predictionList.positionViewAtBeginning()
                     }
                 }
 
@@ -111,83 +117,95 @@ InputHandler {
                     onTextChanged: {
                         if (Clipboard.hasText) {
                             // need to have updated width before repositioning view
-                            timer.restart()
+                            positionerTimer.restart()
                         }
                     }
                 }
+
+                Timer {
+                    id: positionerTimer
+                    interval: 10
+                    onTriggered: predictionList.positionViewAtBeginning()
+                }
             }
         }
     }
-
-
 
     verticalItem: Component {
-        SilicaListView {
-            id: container
+        Item {
+            id: verticalContainer
 
-            model: thread.engine
-            anchors.fill: parent
-            clip: true
-            header: Toolbar {
-                width: parent.width
-                count: preedit.length
-            }
+            property int inactivePadding: Theme.paddingMedium
 
-            delegate: BackgroundItem {
-                onClicked: applyPrediction(model.text, model.index)
-                width: parent.width
-                height: geometry.keyHeightLandscape // assuming landscape!
+            SilicaListView {
+                id: verticalList
 
-                Text {
-                    width: parent.width
-                    horizontalAlignment: Text.AlignHCenter
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: highlighted ? Theme.highlightColor : Theme.primaryColor
-                    font.pixelSize: Theme.fontSizeSmall
-                    fontSizeMode: Text.HorizontalFit
-                    textFormat: Text.StyledText
-                    text: formatText(model.text)
-                }
-            }
+                model: thread.engine
+                anchors.fill: parent
+                clip: true
+                header: Component {
+                    PasteButtonVertical {
+                        visible: Clipboard.hasText
+                        width: verticalList.width
+                        height: visible ? geometry.keyHeightLandscape : 0
+                        popupParent: verticalContainer
+                        popupAnchor: 2 // center
 
-
-
-            Timer {
-                id: timer
-                interval: 16
-                onTriggered: container.positionViewAtBeginning()
-            }
-
-
-            onContentHeightChanged: {
-                timer.restart()
-            }
-
-
-            Connections {
-                target: thread.engine
-                onPredictionsChanged: {
-                    if (!clipboardChange.running) {
-                        container.positionViewAtIndex(0, ListView.Beginning)
+                        onClicked: {
+                            inputHandler.commit(inputHandler.preedit)
+                            MInputMethodQuick.sendCommit(Clipboard.text)
+                        }
                     }
                 }
-            }
-            Connections {
-                target: Clipboard
-                onTextChanged: {
-                    container.positionViewAtBeginning()
-                    clipboardChange.restart()
+
+                delegate: BackgroundItem {
+                    id: background
+                    onClicked: applyPrediction(model.text, model.index)
+                    width: parent.width
+                    height: geometry.keyHeightLandscape // assuming landscape!
+
+                    Text {
+                        width: background.width
+                        horizontalAlignment: Text.AlignHCenter
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: highlighted ? Theme.highlightColor : Theme.primaryColor
+                        font.pixelSize: Theme.fontSizeSmall
+                        fontSizeMode: Text.HorizontalFit
+                        textFormat: Text.StyledText
+                        text: formatText(model.text)
+                    }
+                }
+
+                Connections {
+                    target: thread.engine
+                    onPredictionsChanged: {
+                        if (!clipboardChange.running) {
+                            verticalList.positionViewAtIndex(0, ListView.Beginning)
+                        }
+                    }
+                }
+                Connections {
+                    target: Clipboard
+                    onTextChanged: {
+                        verticalList.positionViewAtBeginning()
+                        clipboardChange.restart()
+                    }
+                }
+                Timer {
+                    id: clipboardChange
+                    interval: 1000
+                }
+                MouseArea {
+                    height: parent.height
+                    width: verticalContainer.inactivePadding
+                }
+                MouseArea {
+                    height: parent.height
+                    width: verticalContainer.inactivePadding
+                    anchors.right: parent.right
                 }
             }
-            Timer {
-                id: clipboardChange
-                interval: 1000
-            }
         }
-    }
-
-    EmojiDialog {
-        id: emojiDialog
     }
 
     onActiveChanged: {
@@ -404,13 +422,3 @@ InputHandler {
         preedit = ""
     }
 }
-
-
-
-
-
-
-
-
-
-

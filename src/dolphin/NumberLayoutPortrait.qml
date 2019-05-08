@@ -3,27 +3,33 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0 as Silica
+import com.jolla.keyboard 1.0
 
 KeyboardLayout {
     id: main
 
+    property real keyWidth: width / 4
+
     portraitMode: true
-    width: geometry.keyboardWidthPortrait
     height: 4 * geometry.keyHeightPortrait
 
     Row {
         NumberKey {
+            width: main.keyWidth
             caption: "1"
         }
         NumberKey {
+            width: main.keyWidth
             caption: "2"
         }
         NumberKey {
+            width: main.keyWidth
             caption: "3"
         }
         NumberKey {
+            width: main.keyWidth
             enabled: Silica.Clipboard.hasText
-            separator: false
+            separator: SeparatorState.HiddenSeparator
             opacity: enabled ? (pressed ? 0.6 : 1.0)
                              : 0.3
             key: Qt.Key_Paste
@@ -39,15 +45,19 @@ KeyboardLayout {
     Row {
         NumberKey {
             caption: "4"
+            width: main.keyWidth
         }
         NumberKey {
             caption: "5"
+            width: main.keyWidth
         }
         NumberKey {
             caption: "6"
+            width: main.keyWidth
         }
         NumberKey {
-            separator: false
+            width: main.keyWidth
+            separator: SeparatorState.HiddenSeparator
             key: Qt.Key_Multi_key
             caption: "+/-"
             text: "+-"
@@ -57,33 +67,36 @@ KeyboardLayout {
     Row {
         NumberKey {
             caption: "7"
+            width: main.keyWidth
         }
         NumberKey {
             caption: "8"
+            width: main.keyWidth
         }
         NumberKey {
             caption: "9"
+            width: main.keyWidth
         }
         BackspaceKey {
-            width: main.width / 4
+            width: main.keyWidth
             height: geometry.keyHeightPortrait
             separator: false
         }
     }
 
     Row {
-        NumberKey {
-            caption: Qt.locale().decimalPoint
-        }
+        x: main.keyWidth
+
         NumberKey {
             caption: "0"
+            width: main.keyWidth
         }
-        SpacebarKey {
-            width: main.width / 4
-            height: geometry.keyHeightPortrait
+        NumberKey {
+            caption: Qt.locale().decimalPoint
+            width: main.keyWidth
         }
         EnterKey {
-            width: main.width / 4
+            width: main.keyWidth
             height: geometry.keyHeightPortrait
             separator: false
         }

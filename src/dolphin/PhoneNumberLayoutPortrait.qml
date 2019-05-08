@@ -3,12 +3,12 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0 as Silica
+import com.jolla.keyboard 1.0
 
 KeyboardLayout {
     id: main
 
     portraitMode: true
-    width: geometry.keyboardWidthPortrait
     height: 4 * geometry.keyHeightPortrait
 
     Row {
@@ -31,9 +31,10 @@ KeyboardLayout {
             width: main.width / 4
         }
         NumberKey {
-            separator: false
+            separator: SeparatorState.HiddenSeparator
             enabled: Silica.Clipboard.hasText
             key: Qt.Key_Paste
+            width: main.width / 4
             opacity: enabled ? (pressed ? 0.6 : 1.0)
                              : 0.3
 
@@ -71,7 +72,7 @@ KeyboardLayout {
             height: geometry.keyHeightPortrait
             width: main.width / 4
             showPopper: false
-            separator: false
+            separator: SeparatorState.HiddenSeparator
         }
     }
 

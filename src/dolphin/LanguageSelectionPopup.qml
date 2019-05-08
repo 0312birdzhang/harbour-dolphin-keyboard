@@ -59,6 +59,8 @@ Rectangle {
     }
 
     function show(touchPoint) {
+        keyboard.cancelGesture()
+
         fadeAnimation.stop()
         inInitialPosition = true
         pointId = touchPoint.pointId
@@ -99,7 +101,7 @@ Rectangle {
 
             var cell = cellComponent.createObject(null,
                                                   {"index": i,
-                                                   "text": canvas.layoutModel.get(i).name})
+                                                   "text": qsTrId(canvas.layoutModel.get(i).name)})
             cells.push(cell)
 
             if (rowWidth + cell.width > maxContentWidth) {

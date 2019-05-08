@@ -38,7 +38,7 @@ KeyboardLayout {
     id: layout
     splitSupported: true
 
-
+    type: "quick3"
     primaryHandler: CangJieHandler {  }
     secondaryHandler: Xt9Handler {  }
 

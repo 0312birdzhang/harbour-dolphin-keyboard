@@ -25,7 +25,7 @@ PasteButtonBase {
             truncationMode: TruncationMode.Fade
             verticalAlignment: Text.AlignVCenter
             maximumLineCount: 1
-            text: Clipboard.text.replace("\n", " ")
+            text: Clipboard.text.replace(/\n/g, " ")
         }
 
         Image {

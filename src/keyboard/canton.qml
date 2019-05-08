@@ -37,7 +37,7 @@ import "../dolphin"
 KeyboardLayout {
     id: layout
     splitSupported: true
-
+    type: "canton"
     primaryHandler: CantonHandler {  }
     secondaryHandler: Xt9Handler {  }
 

@@ -4,7 +4,6 @@
 import QtQuick 2.0
 
 Item {
-
     //Doplhin Keyboard
     //Hide the keyboard when symobl keyboard is available
     //Too complicated, use background would be better
@@ -13,6 +12,7 @@ Item {
 
     property bool followRowHeight: true
     property int splitIndex: -1
+    property bool separateButtonSizes // row's button sizes are calculated independently
 
     // calculates maximum width for a "basic" button
     function maximumBasicButtonWidth(shareableWidth) {

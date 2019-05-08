@@ -36,7 +36,7 @@ import "../dolphin"
 KeyboardLayout {
     id: layout
     splitSupported: true
-
+    type: "en+"
     primaryHandler: Xt9Handler {  }
     secondaryHandler: Xt9Handler {  }
 

@@ -44,8 +44,14 @@ Item {
 
     //Dolphin
     property string table: ""
-    property Item database: Database {
+//    property Item database: Database {
 
+//    }
+    Database {
+        id: database
+        Component.onCompleted: {
+            database.initial(table)
+        }
     }
 
     onActiveChanged: {
@@ -198,10 +204,5 @@ Item {
 
     // called when input state needs to be reset
     function reset() {
-    }
-
-    //Simplified Chines to Tradintional Chinese
-    function simToTrad(text) {
-
     }
 }

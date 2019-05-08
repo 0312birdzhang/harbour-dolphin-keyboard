@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2013 Jolla ltd. and/or its subsidiary(-ies). All rights reserved.
+ * Copyright (C) 2016 Jolla Ltd.
  *
- * Contact: Pekka Vuorela <pekka.vuorela@jollamobile.com>
+ * Contact: Joona Petrell <joona.petrell@jollamobile.com>
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -28,12 +28,8 @@
  */
 
 import QtQuick 2.0
-import Sailfish.Silica 1.0
+import com.jolla.keyboard 1.0
 
-FunctionKey {
-    icon.source: "image://theme/icon-m-backspace" + (pressed ? ("?" + Theme.highlightColor) : "")
-    repeat: true
-    key: Qt.Key_Backspace
-    implicitWidth: shiftKeyWidth
-    background.visible: false
+CharacterKey {
+    fontSizeMode: Text.HorizontalFit
 }

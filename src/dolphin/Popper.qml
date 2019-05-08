@@ -40,12 +40,12 @@ Rectangle {
     clip: expanded
 
     property Item target: null
-    property string accents
     property int activeCell
     property int initialActiveCell
     property real expandedWidth
     property real expandedX
     property bool expanded
+    property real activeX
 
     onTargetChanged: {
         expanded = false
@@ -57,14 +57,18 @@ Rectangle {
         }
     }
 
+    ListModel {
+        id: accents
+    }
+
     Row {
         id: contentRow
         height: parent.height
 
         Repeater {
-            model: popper.accents !== "" ? popper.accents.length : 0
+            model: accents
             PopperCell {
-                character: popper.accents.charAt(index)
+                character: labelText
                 active: index === popper.activeCell
                 textVisible: popper.expanded || index === popper.activeCell
             }
@@ -72,9 +76,9 @@ Rectangle {
     }
     Timer {
         id: popperExpandTimer
-        interval: 0
+        interval: 500
         onTriggered: {
-            if (popper.accents.length > 1) {
+            if (accents.count > 1 || geometry.isLargeScreen) {
                 keyboard.inputHandler._handleKeyRelease()
                 popper.expanded = true
             }
@@ -90,18 +94,12 @@ Rectangle {
     states: [
         State {
             name: "active"
-            when: target !== null && target.showPopper && !popper.expanded
+            when: target !== null && target.showPopper && !popper.expanded && !geometry.isLargeScreen
 
             PropertyChanges {
                 target: popper
                 opacity: 1
-
-                x: {
-                    var pos = popper.parent.mapFromItem(target, 0, 0).x + (target.width - popper.width) / 2
-                    var margin = geometry.popperMargin
-                    return Math.max(Math.min(pos, parent.width - popper.width - margin), margin)
-                }
-                y: popper.parent.mapFromItem(target, 0, 0).y - popper.height + Theme.paddingSmall
+                x: popper.activeX
             }
         },
         State {
@@ -112,14 +110,13 @@ Rectangle {
                 target: popper
                 opacity: 1
                 x: {
-                    var result = initialActiveCell > 0 ? popper.expandedX : x
+                    var result = initialActiveCell > 0 ? popper.expandedX : popper.activeX
                     var margin = geometry.popperMargin
                     return Math.max(margin,
                                     Math.min(result,
                                              parent.width-popper.expandedWidth-margin))
                 }
                 width: popper.expandedWidth
-                y: y
             }
             PropertyChanges {
                 target: contentRow
@@ -134,14 +131,14 @@ Rectangle {
             to: ""
 
             SequentialAnimation {
-                PauseAnimation { duration: 0 }
+                PauseAnimation { duration: 20 }
                 PropertyAction {
                     target: popper
-                    properties: "opacity, x, y"
+                    properties: "opacity, x"
                 }
                 ScriptAction {
                     script: {
-                        popper.accents = ""
+                        accents.clear()
                         popper.opacity = 0
                     }
                 }
@@ -153,11 +150,11 @@ Rectangle {
             SequentialAnimation {
                 PropertyAction {
                     target: popper
-                    properties: "opacity, x, y"
+                    properties: "opacity, x"
                 }
                 ScriptAction {
                     script: {
-                        popper.accents = ""
+                        accents.clear()
                         popper.expanded = false
                         popper.opacity = 0
                     }
@@ -172,13 +169,13 @@ Rectangle {
                 NumberAnimation {
                     target: popper
                     properties: "x,width"
-                    duration: 0
+                    duration: 100
                     easing.type: Easing.OutQuad
                 }
                 NumberAnimation {
                     target: contentRow
                     properties: "x"
-                    duration: 0
+                    duration: 100
                     easing.type: Easing.OutQuad
                 }
             }
@@ -190,7 +187,7 @@ Rectangle {
             return
         }
 
-        inputKey.text = accents.charAt(activeCell)
+        inputKey.text = accents.get(activeCell).inputText
         keyboard.inputHandler._handleKeyPress(inputKey)
         keyboard.inputHandler._handleKeyClick(inputKey)
         keyboard.inputHandler._handleKeyRelease(inputKey)
@@ -209,18 +206,25 @@ Rectangle {
     }
     function setup() {
         // layout out everything ready so that after a long press we can just animate
-        var accentString = keyboard.isShifted ? target.accentsShifted : target.accents
-        accentString = accentString === "" ||
-                       keyboard.inSymView ||
-                       keyboard.inSymView2 ? target.text : accentString
-        // Make sure the active character is the first one at this point.
-        accentString = target.text + accentString.replace(target.text, "")
+        y = popper.parent.mapFromItem(target, 0, 0).y - popper.height + Theme.paddingSmall
+        var pos = popper.parent.mapFromItem(target, 0, 0).x + (target.width - popper.width) / 2
+        var margin = geometry.popperMargin
+        activeX = Math.max(Math.min(pos, parent.width - popper.width - margin), margin)
 
-        popper.expandedWidth = accentString.length * geometry.accentPopperCellWidth +
-                               2 * geometry.accentPopperMargin
+        var accentString = (keyboard.inSymView || keyboard.inSymView2)
+                           ? "" : keyboard.isShifted ? target.accentsShifted
+                                                     : target.accents
 
         // calculate expanded position and make sure we stay inside the vkb area
-        var middleCell = Math.floor((accentString.length-1) * .5)
+        var baseIndex = accentString.indexOf(target.text)
+        var itemCount = baseIndex >= 0 ? accentString.length : (accentString.length + 1)
+        var middleCell = baseIndex >= 0 ? baseIndex : Math.floor(itemCount / 2)
+
+        accentString = accentString.replace(target.text, "") // added back later
+
+        popper.expandedWidth = itemCount * geometry.accentPopperCellWidth +
+                               2 * geometry.accentPopperMargin
+
         var mappedTargetX = parent.mapFromItem(target, 0, 0).x +
                             Math.floor((target.width - geometry.accentPopperCellWidth) / 2)
 
@@ -234,14 +238,17 @@ Rectangle {
         // calculate active cell
         var translatedX = mappedTargetX + target.width * .5 - expandedX - geometry.accentPopperMargin
         translatedX = Math.max(Math.min(translatedX,
-                               expandedWidth-2*geometry.accentPopperMargin-0.1), 0)
+                                        expandedWidth-2*geometry.accentPopperMargin-0.1),
+                               0)
         activeCell = Math.floor(translatedX / geometry.accentPopperCellWidth)
         initialActiveCell = activeCell
 
-        // create cell array so that the base character is at correct position
-        popper.accents = accentString.substring(1, activeCell+1) +
-                         accentString.charAt(0) +
-                         accentString.substring(activeCell+1)
+        // TODO: support separate visual and input text on accents
+        accents.clear()
+        for (var i = 0; i < accentString.length; ++i) {
+            accents.append({ "labelText": accentString.charAt(i), "inputText": accentString.charAt(i) })
+        }
+        accents.insert(activeCell, { "labelText": target.keyText, "inputText": target.text } )
 
         // position content row so that the base character is visible and centered
         contentRow.x = popper.radius -

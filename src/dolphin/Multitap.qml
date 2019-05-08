@@ -9,7 +9,7 @@ QtObject {
     property int index: -1
 
     property Timer timer: Timer {
-        interval: 16
+        interval: 1000
         onTriggered: commit()
     }
 

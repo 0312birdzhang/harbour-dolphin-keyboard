@@ -23,8 +23,8 @@ BackgroundItem {
         id: icon
         visible: icon.status === Image.Error || icon.status === Image.Null || src === null || typeof src === "undefined"  ? false : true
         asynchronous: true
-        width: 36
-        height: 36
+        width: Theme.itemSizeSmall/2
+        height: Theme.itemSizeSmall/2
         anchors.centerIn: parent
     }
 

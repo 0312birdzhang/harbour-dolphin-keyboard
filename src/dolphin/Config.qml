@@ -21,5 +21,5 @@ Settings {
     property real transparency: config.load("ui-opacity")
 
     property int emoji: config.load("emoji-keyboard")
-    property var frequent: config.load("emoji-frequent") ? config.load("emoji-frequent").split(",") :[]
+    property var frequent: config.load("emoji-frequent") ? config.load("emoji-frequent").split(",") :["\uD83D\uDD50","\uD83D\uDC36","\uD83C\uDF8D"]
 }

@@ -19,6 +19,7 @@ KeyboardRow {
     DeadKey {
         id: deadKey
         implicitWidth: punctuationKeyWidthNarrow
+        fixedWidth: !splitActive
         separator: SeparatorState.HiddenSeparator
     }
     ContextAwareCommaKey {

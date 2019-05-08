@@ -75,10 +75,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Background Picture ( /home/nemo/Pictures/ )</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Background Transaprency</source>
         <translation type="unfinished"></translation>
     </message>
@@ -172,6 +168,10 @@
     </message>
     <message>
         <source>Wubi Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter something here</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

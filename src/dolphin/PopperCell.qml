@@ -15,12 +15,17 @@ Item {
 
     Text {
         id: textItem
-        anchors.centerIn: parent
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        // wider than parent so text fitting allows to use full popper area on single key mode
+        width: geometry.popperWidth - Theme.paddingSmall
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         color: Theme.primaryColor
         opacity: popperCell.active ? 1 : .35
         font.family: Theme.fontFamily
         font.pixelSize: geometry.popperFontSize
+        fontSizeMode: Text.Fit
     }
 }

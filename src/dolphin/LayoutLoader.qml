@@ -6,6 +6,8 @@ import QtQuick 2.0
 Loader {
     property int index: -1
     property int pendingIndex: -1
+    property var layoutModelItem: index >= 0 ? canvas.layoutModel.get(index) : null
+    readonly property string sourceDirectory: "/usr/share/maliit/plugins/com/jolla/layouts/"
 
     width: parent.width
     source: index >= 0 ?  "/usr/share/maliit/plugins/com/jolla/layouts/" + canvas.layoutModel.get(index).layout : ""

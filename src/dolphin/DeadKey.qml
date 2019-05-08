@@ -15,8 +15,6 @@ CharacterKey {
     keyType: !keyboard.inSymView ? KeyType.DeadKey : KeyType.CharacterKey
     useBoldFont: keyboard.deadKeyAccent === text
     showPopper: keyType === KeyType.CharacterKey
-    fixedWidth: !splitActive
-    implicitWidth: punctuationKeyWidth
 
     onPressedChanged: {
         if (pressed
@@ -25,6 +23,7 @@ CharacterKey {
              && keyboard.lastInitialKey === deadKey) {
             keyboard.deadKeyAccent = text
             _quickPicking = true
+            keyboard.cancelGesture()
         } else {
             _quickPicking = false
         }

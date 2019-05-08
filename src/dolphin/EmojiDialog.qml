@@ -12,11 +12,17 @@ Rectangle {
     z: 2
 
     anchors.fill: parent
-    anchors.topMargin:topItem.height
+    anchors.topMargin: topItem.height
 
     color: Theme.rgba(Theme.highlightDimmerColor, 1)
 
-    property var model: type === 0 ? frequent : ( type === 1 ? face : ( type === 2 ? nature : ( type === 3 ? object : ( type === 4 ? place : ( type === 5 ? sign : frequent ) ) ) ) )
+    property var model: type === 0 ? frequent :
+                                     ( type === 1 ? face :
+                                                    ( type === 2 ? nature :
+                                                                   ( type === 3 ? object :
+                                                                                  ( type === 4 ? place :
+                                                                                                 ( type === 5 ? sign :
+                                                                                                                frequent ) ) ) ) )
 
     property int type: 0
 
@@ -65,8 +71,8 @@ Rectangle {
         anchors.right: close.left
         flickableDirection: Flickable.VerticalFlick
         model: container.model
-        cellWidth: width / 10
-        cellHeight: height / 4
+        cellWidth: Theme.itemSizeSmall // width / 10
+        cellHeight: Theme.itemSizeSmall //height / 4
         clip: true
 
         VerticalScrollDecorator {  }
@@ -75,7 +81,7 @@ Rectangle {
             Row {
                 width: listView.width
                 height: visible ? 80 : 0
-                visible: !keyboard.portraitMode
+                visible: inEmojiView //!keyboard.portraitMode
 
                 WidgetKey {
                     width: 80

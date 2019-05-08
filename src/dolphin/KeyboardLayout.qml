@@ -5,21 +5,18 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import harbour.dolphin.keyboard 1.0
 
+
 Column {
-    id: layout
+    id: keyboardLayout
 
     width: parent ? parent.width : 0
 
     //Dolphin Keyboard
-
     property Item config: Config {  }
     property Item primaryHandler
     property Item secondaryHandler
-
     property bool xt9: keyboard.inputHandler !== secondaryHandler ? false : true
-
     function init() {
-
         if ( keyboard.allowLayoutChanges ) {
 
             if ( keyboard.inputHandler !== primaryHandler || keyboard.inputHandler !== secondaryHandler ) {
@@ -44,7 +41,7 @@ Column {
     }
 
     Image {
-        visible: config.background? true: false
+        visible: config.background? config.background !== 0 ? true: false: false
         anchors.fill: parent
         parent: keyboard
         fillMode: Image.PreserveAspectCrop
@@ -74,12 +71,22 @@ Column {
     property int functionKeyWidth
     property int shiftKeyWidthNarrow
     property int symbolKeyWidthNarrow
-    property QtObject attributes: visible ? keyboard : keyboard.emptyAttributes
+    property QtObject attributes: visible ? keyboard : keyboard.nextLayoutAttributes
     property string languageCode
     property string inputMode
     property int avoidanceWidth
     property bool splitActive
     property bool splitSupported
+    property bool useTopItem: !splitActive
+    property bool capsLockSupported: true
+    property int layoutIndex: -1
+    property bool allowSwipeGesture: true
+
+    signal flashLanguageIndicator()
+
+    Component.onCompleted: updateSizes()
+    onWidthChanged: updateSizes()
+    onPortraitModeChanged: updateSizes()
 
     Connections {
         target: MInputMethodQuick
@@ -100,19 +107,16 @@ Column {
 
     Connections {
         target: keyboard
+        onSplitEnabledChanged: {
+            console.warn("onSplitEnabledChanged")
+            updateSizes()
+        }
         onFullyOpenChanged: {
             if ( keyboard.fullyOpen ) {
                 console.warn("onFullyOpenChanged")
                 init()
             }
         }
-
-        onSplitEnabledChanged: {
-            console.warn("onSplitEnabledChanged")
-            //init()
-            updateSizes()
-        }
-
         onInputHandlerChanged: {
             console.warn("onInputHandlerChanged")
         }
@@ -127,7 +131,6 @@ Column {
         }
     }
 
-
     onHeightChanged: {
         console.warn("onHeightChanged")
     }
@@ -136,28 +139,24 @@ Column {
         console.warn("onVisibleChanged")
     }
 
-    Component.onCompleted: {
-        console.warn("Component.onCompleted")
-        updateSizes()
-        //init()
-    }
-
-    onWidthChanged: {
-        console.warn("onWidthChanged")
-        updateSizes()
-        //init()
-    }
-
-    onPortraitModeChanged: {
-        console.warn("onPortraitModeChanged")
-        updateSizes()
-        //init()
-
-    }
-
     Binding on portraitMode {
-        when: visible
+        when: MInputMethodQuick.active
         value: keyboard.portraitMode
+    }
+
+    Loader {
+        // Expose "keyboardLayout" to the context of the loaded TopItem
+        readonly property Item keyboardLayout: keyboardLayout
+
+        active: useTopItem && (layoutIndex >= 0)
+        // sourceComponent is evaluated even when active is false, so we need the ternary operator here
+        sourceComponent: active ? keyboard.getInputHandler(keyboardLayout).topItem : null
+        width: parent.width
+        visible: active
+        clip: keyboard.transitionRunning
+        asynchronous: false
+        opacity: (canvas.activeIndex === keyboardLayout.layoutIndex) ? 1.0 : 0.0
+        Behavior on opacity { FadeAnimator {}}
     }
 
     function updateSizes () {
@@ -165,8 +164,8 @@ Column {
             return
         }
 
-        if ( portraitMode ) {
-            keyHeight = geometry.keyHeightPortrait * config.scale
+        if (portraitMode) {
+            keyHeight = geometry.keyHeightPortrait
             punctuationKeyWidth = geometry.punctuationKeyPortait
             punctuationKeyWidthNarrow = geometry.punctuationKeyPortraitNarrow
             shiftKeyWidth = geometry.shiftKeyWidthPortrait
@@ -176,7 +175,7 @@ Column {
             avoidanceWidth = 0
             splitActive = false
         } else {
-            keyHeight = geometry.keyHeightLandscape * config.scale
+            keyHeight = geometry.keyHeightLandscape
             punctuationKeyWidth = geometry.punctuationKeyLandscape
             punctuationKeyWidthNarrow = geometry.punctuationKeyLandscapeNarrow
             functionKeyWidth = geometry.functionKeyWidthLandscape
@@ -194,7 +193,6 @@ Column {
                 symbolKeyWidthNarrow = geometry.symbolKeyWidthLandscapeNarrow
             }
             splitActive = shouldSplit
-
         }
 
         var i
@@ -208,7 +206,7 @@ Column {
                 child.height = keyHeight
             }
 
-            if (child.maximumBasicButtonWidth !== undefined) {
+            if (child.maximumBasicButtonWidth !== undefined && !child.separateButtonSizes) {
                 maxButton = Math.min(child.maximumBasicButtonWidth(width), maxButton)
             }
         }
@@ -217,7 +215,12 @@ Column {
             child = children[i]
 
             if (child.relayout !== undefined) {
-                child.relayout(maxButton)
+                if (child.hasOwnProperty("separateButtonSizes") && child.separateButtonSizes) {
+                    var rowMax = child.maximumBasicButtonWidth(width)
+                    child.relayout(rowMax)
+                } else {
+                    child.relayout(maxButton)
+                }
             }
         }
     }

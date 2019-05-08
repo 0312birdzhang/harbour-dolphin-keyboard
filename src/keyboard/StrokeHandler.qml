@@ -108,6 +108,9 @@ InputHandler {
     }
 
     function handleKeyClick() {
+        console.log("clicked")
+        console.log("pressedKey.text: ", pressedKey.text)
+
         var handled = false
         keyboard.expandedPaste = false
 

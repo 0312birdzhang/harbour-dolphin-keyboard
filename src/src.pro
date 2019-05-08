@@ -1,2 +1,2 @@
 TEMPLATE = subdirs
-SUBDIRS = core settings dolphin config keyboard fonts emoji
+SUBDIRS = core settings dolphin config keyboard emoji fonts

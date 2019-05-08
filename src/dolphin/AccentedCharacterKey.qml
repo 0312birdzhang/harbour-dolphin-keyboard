@@ -14,7 +14,7 @@ CharacterKey {
 
     useBoldFont: _deadAccentIndex > -1
     keyType: _accentedText !== "" ? KeyType.PopupKey : KeyType.CharacterKey
-    _keyText: _accentedText !== "" ? _accentedText :
+    keyText: _accentedText !== "" ? _accentedText :
                                     attributes.inSymView && symView.length > 0 ? (attributes.inSymView2 ? symView2 : symView)
                                                                                : (attributes.isShifted ? captionShifted : caption)
 }

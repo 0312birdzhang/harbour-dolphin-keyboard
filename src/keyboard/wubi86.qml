@@ -35,7 +35,7 @@ import "../dolphin"
 KeyboardLayout {
     id: layout
     splitSupported: true
-
+    type: "wubi86"
     primaryHandler: WubiHandler {  }
     secondaryHandler: Xt9Handler {  }
 

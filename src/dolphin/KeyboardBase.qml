@@ -34,7 +34,7 @@ import com.jolla.keyboard 1.0
 import org.nemomobile.configuration 1.0
 import "touchpointarray.js" as ActivePoints
 
-Item {
+SwipeGestureArea {
     id: keyboard
 
     property Item layout
@@ -53,12 +53,14 @@ Item {
                                           && (typeof inputHandler.preedit !== "string"
                                               || inputHandler.preedit.length === 0))
     readonly property bool isShiftLocked: shiftState === ShiftState.LockedShift
+    readonly property alias languageSelectionPopupVisible: languageSelectionPopup.visible
 
     property bool inSymView
     property bool inSymView2
     // allow chinese input handler to override enter key state
     property bool chineseOverrideForEnter
 
+    property bool silenceFeedback
     property bool layoutChangeAllowed
     property string deadKeyAccent
     property bool shiftKeyPressed
@@ -67,17 +69,28 @@ Item {
     property bool closeSwipeActive
     property int closeSwipeThreshold: Math.max(height*.3, Theme.itemSizeSmall)
 
-    property QtObject emptyAttributes: Item {
+    property QtObject nextLayoutAttributes: QtObject {
         property bool isShifted
         property bool inSymView
         property bool inSymView2
         property bool isShiftLocked
         property bool chineseOverrideForEnter
+
+        function update(layout) {
+            // Figure out what state we want to animate the next layout in
+            isShifted = keyboard.shouldUseAutocaps(layout)
+            inSymView = false
+            inSymView2 = false
+            isShiftLocked = false
+            chineseOverrideForEnter = keyboard.chineseOverrideForEnter
+        }
     }
 
     // Can be changed to PreeditTestHandler to have another mode of input
     property Item inputHandler: InputHandler {
     }
+
+    readonly property bool swipeGestureIsSafe: !releaseTimer.running
 
     height: layout ? layout.height : 0
     onLayoutChanged: if (layout) layout.parent = keyboard
@@ -91,6 +104,11 @@ Item {
         id: popper
         z: 10
         target: lastPressedKey
+        onExpandedChanged: {
+            if (expanded) {
+                keyboard.cancelGesture()
+            }
+        }
     }
 
     LanguageSelectionPopup {
@@ -104,6 +122,11 @@ Item {
     }
 
     Timer {
+        id: releaseTimer
+        interval: 300
+    }
+
+    Timer {
         id: languageSwitchTimer
         interval: 500
         onTriggered: {
@@ -112,6 +135,12 @@ Item {
                 languageSelectionPopup.show(point)
             }
         }
+    }
+
+    Timer {
+        id: autocapsTimer
+        interval: 1
+        onTriggered: applyAutocaps()
     }
 
     QuickPick {
@@ -132,7 +161,7 @@ Item {
         onFocusTargetChanged: {
             if (activeEditor) {
                 resetKeyboard()
-                applyAutocaps()
+                autocapsTimer.start() // focus change may come before updated context, delay handling
             }
         }
         onInputMethodReset: {
@@ -163,18 +192,14 @@ Item {
         }
     }
 
-    property alias multiPointTouchArea: multiPointTouchArea
-    property alias touchPoints: multiPointTouchArea.touchPoints
-
     MultiPointTouchArea {
-        id: multiPointTouchArea
         anchors.fill: parent
         enabled: !useMouseEvents.value
+
         onPressed: keyboard.handlePressed(touchPoints)
         onUpdated: keyboard.handleUpdated(touchPoints)
         onReleased: keyboard.handleReleased(touchPoints)
         onCanceled: keyboard.handleCanceled(touchPoints)
-
     }
 
     function handlePressed(touchPoints) {
@@ -183,6 +208,7 @@ Item {
         }
 
         closeSwipeActive = true
+        silenceFeedback = false
         pressTimer.start()
 
         for (var i = 0; i < touchPoints.length; i++) {
@@ -206,20 +232,25 @@ Item {
             point.x = incomingPoint.x
             point.y = incomingPoint.y
 
-            if (ActivePoints.array.length === 1
-                    && closeSwipeActive
-                    && pressTimer.running
-                    && (point.y - point.startY > closeSwipeThreshold)) {
-                MInputMethodQuick.userHide()
-                if (point.pressedKey) {
-                    inputHandler._handleKeyRelease()
-                    point.pressedKey.pressed = false
+            if (ActivePoints.array.length === 1 && closeSwipeActive && pressTimer.running) {
+                var yDiff = point.y - point.startY
+                silenceFeedback = (yDiff > Math.abs(point.x - point.startX))
+
+                if (yDiff > closeSwipeThreshold) {
+                    // swiped down to close keyboard
+                    MInputMethodQuick.userHide()
+                    if (point.pressedKey) {
+                        inputHandler._handleKeyRelease()
+                        point.pressedKey.pressed = false
+                    }
+                    lastPressedKey = null
+                    pressTimer.stop()
+                    languageSwitchTimer.stop()
+                    ActivePoints.remove(point)
+                    return
                 }
-                lastPressedKey = null
-                pressTimer.stop()
-                languageSwitchTimer.stop()
-                ActivePoints.remove(point)
-                return
+            } else {
+                silenceFeedback = false
             }
 
             if (popper.expanded && point.pressedKey === lastPressedKey) {
@@ -235,9 +266,9 @@ Item {
         if (point.pressedKey === key)
             return
 
-        buttonPressEffect.play()
+        if (!silenceFeedback) buttonPressEffect.play()
 
-        if (key) {
+        if (key && !silenceFeedback) {
             if (typeof key.keyType !== 'undefined' && key.keyType === KeyType.CharacterKey && key.text !== " ") {
                 SampleCache.play("/usr/share/sounds/jolla-ambient/stereo/keyboard_letter.wav")
             } else {
@@ -245,8 +276,10 @@ Item {
             }
         }
 
-        if (point.pressedKey !== null)
+        if (point.pressedKey !== null) {
+            inputHandler._handleKeyRelease()
             point.pressedKey.pressed = false
+        }
 
         point.pressedKey = key
         if (!point.initialKey) {
@@ -258,6 +291,8 @@ Item {
         lastPressedKey = point.pressedKey
 
         if (point.pressedKey !== null) {
+            // when typing fast with two finger, one finger might be still pressed when the other hits screen.
+            // on that case, trigger input from previous character
             releasePreviousCharacterKey(point)
             point.pressedKey.pressed = true
             inputHandler._handleKeyPress(point.pressedKey)
@@ -267,6 +302,8 @@ Item {
     }
 
     function handleReleased(touchPoints) {
+        releaseTimer.restart()
+
         if (languageSelectionPopup.visible) {
             if (languageSelectionPopup.opening) {
                 languageSelectionPopup.hide()
@@ -292,7 +329,7 @@ Item {
                 popper.release()
                 point.pressedKey.pressed = false
             } else {
-                releaseKey(point.pressedKey)
+                triggerKey(point.pressedKey)
             }
 
             if (point.pressedKey.keyType !== KeyType.ShiftKey && !isPressed(KeyType.DeadKey)) {
@@ -345,6 +382,7 @@ Item {
             return
 
         if (point.pressedKey) {
+            inputHandler._handleKeyRelease()
             point.pressedKey.pressed = false
             if (lastPressedKey === point.pressedKey) {
                 lastPressedKey = null
@@ -380,12 +418,13 @@ Item {
         deadKeyAccent = ""
     }
 
-    function applyAutocaps() {
+    function shouldUseAutocaps(layout) {
         if (MInputMethodQuick.surroundingTextValid
                 && MInputMethodQuick.contentType === Maliit.FreeTextContentType
                 && MInputMethodQuick.autoCapitalizationEnabled
                 && !MInputMethodQuick.hiddenText
                 && layout && layout.type === "") {
+
             var position = MInputMethodQuick.cursorPosition
             var text = MInputMethodQuick.surroundingText.substring(0, position)
 
@@ -393,20 +432,28 @@ Item {
                     || (position == 1 && text[0] === " ")
                     || (position >= 2 && text[position - 1] === " "
                         && ".?!".indexOf(text[position - 2]) >= 0)) {
-                autocaps = true
+                return true
             } else {
-                autocaps = false
+                return false
             }
         } else {
-            autocaps = false
+            return false
         }
+    }
+
+    function applyAutocaps() {
+        autocaps = shouldUseAutocaps(layout)
     }
 
     function cycleShift() {
         if (shiftState === ShiftState.NoShift) {
             shiftState = ShiftState.LatchedShift
         } else if (shiftState === ShiftState.LatchedShift) {
-            shiftState = ShiftState.LockedShift
+            if (layout && layout.capsLockSupported) {
+                shiftState = ShiftState.LockedShift
+            } else {
+                shiftState = ShiftState.NoShift
+            }
         } else if (shiftState === ShiftState.LockedShift) {
             shiftState = ShiftState.NoShift
         } else {
@@ -441,10 +488,10 @@ Item {
         }
     }
 
-    function existingCharacterKey(updatedPoint) {
+    function existingCharacterKey(ignoredPoint) {
         for (var i = 0; i < ActivePoints.array.length; i++) {
             var point = ActivePoints.array[i]
-            if (point !== updatedPoint
+            if (point !== ignoredPoint
                     && point.pressedKey
                     && point.pressedKey.keyType === KeyType.CharacterKey) {
                 return point
@@ -452,15 +499,15 @@ Item {
         }
     }
 
-    function releasePreviousCharacterKey(updatedPoint) {
-        var existing = existingCharacterKey(updatedPoint)
+    function releasePreviousCharacterKey(ignoredPoint) {
+        var existing = existingCharacterKey(ignoredPoint)
         if (existing) {
-            releaseKey(existing.pressedKey)
+            triggerKey(existing.pressedKey)
             ActivePoints.remove(existing)
         }
     }
 
-    function releaseKey(key) {
+    function triggerKey(key) {
         if (key.keyType !== KeyType.DeadKey) {
             inputHandler._handleKeyClick(key)
         }

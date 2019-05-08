@@ -9,7 +9,12 @@ import "."
 
 KeyboardLayout {
     id: hwrLayout
+
+    // stack candidates and canvas on top of each other
+    property bool smallWidthMode: portraitMode && !geometry.isLargeScreen
+
     type: "hwr"
+    useTopItem: smallWidthMode
 
     KeyboardRow {
         visible: keyboard.inSymView
@@ -42,7 +47,7 @@ KeyboardLayout {
     }
 
     KeyboardRow {
-        visible: keyboard.inSymView && !hwrLayout.portraitMode
+        visible: keyboard.inSymView && !hwrLayout.smallWidthMode
 
         ShiftKey {}
 
@@ -58,7 +63,7 @@ KeyboardLayout {
     }
 
     KeyboardRow {
-        visible: keyboard.inSymView && hwrLayout.portraitMode
+        visible: keyboard.inSymView && hwrLayout.smallWidthMode
 
         ShiftKey {}
 
@@ -72,16 +77,17 @@ KeyboardLayout {
     }
 
     Item {
-        height: !keyboard.inSymView ? geometry.hwrCanvasHeight
-                                    : hwrLayout.portraitMode ? 0 : hwrLayout.keyHeight
+        height: !keyboard.inSymView ? hwrCanvas.height
+                                    : hwrLayout.smallWidthMode ? 0
+                                                               : hwrLayout.keyHeight
         width: parent.width
 
         Rectangle {
             id: shadeRect
-            visible: !hwrLayout.portraitMode && !keyboard.inSymView
+            visible: !hwrLayout.smallWidthMode && !keyboard.inSymView
             height: geometry.hwrCanvasHeight
-            width: hwrLayout.portraitMode ? parent.width : parent.width * .75
-            x: hwrLayout.portraitMode ? 0 : parent.width * .25
+            width: parent.width * .75
+            x: parent.width * .25
             gradient: Gradient {
                 GradientStop { position: 0; color: Theme.rgba(Theme.highlightBackgroundColor, .10) }
                 GradientStop { position: 1; color: Theme.rgba(Theme.highlightBackgroundColor, .0) }
@@ -93,16 +99,18 @@ KeyboardLayout {
 
             property bool trackingSymbol
 
-            height: geometry.hwrCanvasHeight
-            width: hwrLayout.portraitMode ? parent.width : parent.width * .75
-            x: hwrLayout.portraitMode ? 0 : parent.width * .25
+            height: geometry.hwrCanvasHeight + (hwrLayout.portraitMode && !hwrLayout.smallWidthMode
+                                                ? hwrLayout.keyHeight : 0)
+            width: hwrLayout.smallWidthMode ? parent.width : parent.width * .75
+            x: hwrLayout.smallWidthMode ? 0 : parent.width * .25
             lineWidth: geometry.hwrLineWidth
             threshold: geometry.hwrSampleThresholdSquared
-            //mask: !hwrLayout.portraitMode ? maskItem : null
+            mask: hwrLayout.smallWidthMode ? null : maskItem
             color: Theme.highlightColor
             visible: !keyboard.inSymView
 
             onArcStarted: {
+                keyboard.cancelGesture()
                 fadeTimer.stop()
                 if (fadeAnimation.running) {
                     fadeAnimation.stop()
@@ -170,18 +178,18 @@ KeyboardLayout {
                 topMargin: Theme.paddingSmall
             }
             opacity: .6
-            icon.source: "image://theme/icon-close-vkb"
+            icon.source: "image://theme/icon-m-clear"
             onClicked: MInputMethodQuick.userHide()
         }
 
         Item {
             id: maskItem
             anchors.fill: parent
-            visible: !hwrLayout.portraitMode
+            visible: !hwrLayout.smallWidthMode
 
             Row {
-                id: leftLandscapeRow
-                height: geometry.keyHeightLandscape
+                id: leftBottomRow
+                height: hwrLayout.keyHeight
                 anchors.bottom: parent.bottom
 
                 SymbolKey {
@@ -196,21 +204,26 @@ KeyboardLayout {
                     width: gridView.width / 3
                     separator: SeparatorState.HiddenSeparator
                 }
-                SpacebarKey {
-                    height: parent.height
-                    width: geometry.functionKeyWidthPortrait
-                }
+            }
+
+            SpacebarKey {
+                height: leftBottomRow.height
+                width: hwrLayout.portraitMode ? parent.width - leftBottomRow.width - rightBottomRow.width
+                                              : geometry.functionKeyWidthPortrait
+                anchors.left: leftBottomRow.right
+                anchors.bottom: leftBottomRow.bottom
             }
 
             Row {
-                id: rightLandscapeRow
-                height: geometry.keyHeightLandscape
+                id: rightBottomRow
+                height: hwrLayout.keyHeight
                 anchors {
                     bottom: parent.bottom
                     right: parent.right
                 }
 
                 SpacebarKey {
+                    visible: !hwrLayout.portraitMode
                     languageLabel: ""
                     height: parent.height
                     width: geometry.functionKeyWidthPortrait
@@ -231,13 +244,13 @@ KeyboardLayout {
             }
 
             BackspaceKey {
-                id: landscapeBackspace
+                id: canvasBackspace
                 visible: !keyboard.inSymView
                 anchors {
-                    bottom: rightLandscapeRow.top
+                    bottom: rightBottomRow.top
                     right: parent.right
                 }
-                height: geometry.keyHeightLandscape
+                height: hwrLayout.keyHeight
             }
 
             SilicaFlickable {
@@ -248,7 +261,7 @@ KeyboardLayout {
                     topMargin: Theme.paddingMedium
                     left: parent.left
                     leftMargin: Theme.paddingSmall
-                    bottom: leftLandscapeRow.top
+                    bottom: leftBottomRow.top
                 }
                 width: hwrLayout.width * .25 - Theme.paddingSmall
                 clip: true
@@ -287,7 +300,7 @@ KeyboardLayout {
                 popupAnchor: 1 // = right
                 anchors {
                     right: parent.right
-                    bottom: landscapeBackspace.top
+                    bottom: canvasBackspace.top
                 }
                 height: Theme.itemSizeSmall
 
@@ -304,7 +317,7 @@ KeyboardLayout {
     }
 
     KeyboardRow {
-        visible: hwrLayout.portraitMode
+        visible: hwrLayout.smallWidthMode
 
         SymbolKey {
             caption: inputMode === "traditional" ? keyboard.inSymView ? "手寫" : "符號" // hwr/symbols

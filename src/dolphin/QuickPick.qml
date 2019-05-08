@@ -40,7 +40,7 @@ QtObject {
 
         } else {
             _doneInput = true
-            _lastWasNumber = "1234567890".indexOf(key.text) >= 0
+            _lastWasNumber = KeyboardSupport.isNumber(key.text)
         }
     }
 

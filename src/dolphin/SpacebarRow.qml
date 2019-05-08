@@ -26,47 +26,26 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
 import QtQuick 2.0
-import com.meego.maliitquick 1.0
 import com.jolla.keyboard 1.0
 
-
 KeyboardRow {
-    splitIndex: 4
+    splitIndex: 3
 
-    property int keyWidth: parent.width / 12
-
-    SymbolKey {  }
-
-    LanguageKey {  }
-
-    ContextAwareKey {
-        caption: MInputMethodQuick.contentType === Maliit.EmailContentType? "@": ( MInputMethodQuick.contentType === Maliit.UrlContentType? ":": ( xt9? "," : "，" ) )
-        captionShifted: MInputMethodQuick.contentType === Maliit.EmailContentType? "@": ( MInputMethodQuick.contentType === Maliit.UrlContentType? ":": ( xt9? ",": "，" ) )
-        symView: MInputMethodQuick.contentType === Maliit.EmailContentType? "@": ( MInputMethodQuick.contentType === Maliit.UrlContentType? ":": ( xt9? "," : "，" ) )
-        symView2: MInputMethodQuick.contentType === Maliit.EmailContentType? "@": ( MInputMethodQuick.contentType === Maliit.UrlContentType? ":": ( xt9? "," : "，" ) )
-        accents: ".!?@#$%"
-    }
-
-    SpacebarKey {   }
-
+    SymbolKey {}
+    ContextAwareCommaKey {}
+    SpacebarKey {}
     SpacebarKey {
         active: splitActive
         languageLabel: ""
     }
-
-    ContextAwareKey {
-        caption: MInputMethodQuick.contentType === Maliit.EmailContentType? "_": ( MInputMethodQuick.contentType === Maliit.UrlContentType? "/": ( xt9? ".": "。" ) )
-        captionShifted: MInputMethodQuick.contentType === Maliit.EmailContentType? "_": ( MInputMethodQuick.contentType === Maliit.UrlContentType? "/": ( xt9? ".": "。" ) )
-        symView: MInputMethodQuick.contentType === Maliit.EmailContentType? "_": ( MInputMethodQuick.contentType === Maliit.UrlContentType? "/": ( xt9? ".": "。" ) )
-        symView2: MInputMethodQuick.contentType === Maliit.EmailContentType? "_": ( MInputMethodQuick.contentType === Maliit.UrlContentType? "/": ( xt9? ".": "。" ) )
-        accents: ".!?@#$%"
-        onPressedChanged: {
-            if ( pressed ) {
-                keyboard.updatePopper()
-            }
-        }
+    CharacterKey {
+        caption: "."
+        captionShifted: "."
+        implicitWidth: punctuationKeyWidth
+        fixedWidth: !splitActive
+        separator: SeparatorState.HiddenSeparator
     }
-
-    EnterKey {  }
+    EnterKey {}
 }

@@ -36,11 +36,10 @@ FunctionKey {
 
     property int _charactersWhenPressed
     property bool _quickPicking
-    property string symbolCaption: "A"
+    property string symbolCaption: "ABC"
 
-    clip: true
-    caption: attributes.inSymView ? symbolCaption : "#"
-    implicitWidth: shiftKeyWidth
+    caption: attributes.inSymView ? symbolCaption : "?123"
+    implicitWidth: functionKeyWidth
     keyType: KeyType.SymbolKey
 
     onPressedChanged: {
@@ -48,9 +47,8 @@ FunctionKey {
         if (pressed && !keyboard.inSymView && keyboard.lastInitialKey === symbolKey) {
             keyboard.deadKeyAccent = ""
             keyboard.toggleSymbolMode()
-            //Dolphin Keyboard: Prevent mouse event leak
-            keyboard.cancelAllTouchPoints()
             _quickPicking = true
+            keyboard.cancelGesture()
         } else {
             _quickPicking = false
         }
@@ -63,15 +61,4 @@ FunctionKey {
             keyboard.toggleSymbolMode()
         }
     }
-
-    Rectangle {
-        color: parent.pressed ? Theme.highlightBackgroundColor : Theme.primaryColor
-        opacity: parent.pressed ? 0.6 : 0.17
-        radius: geometry.keyRadius
-        anchors.fill: parent
-        anchors.margins: Theme.paddingMedium
-
-    }
-
-
 }

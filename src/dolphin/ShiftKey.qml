@@ -48,9 +48,14 @@ FunctionKey {
     caption: attributes.inSymView ? (attributes.inSymView2 ? "2/2" : "1/2") : ""
     key: Qt.Key_Shift
     keyType: KeyType.ShiftKey
+    background.visible: attributes.inSymView
 
     onPressedChanged: {
         if (!keyboard.inSymView) {
+            if (pressed) {
+                keyboard.cancelGesture()
+            }
+
             if (pressed && !keyboard.isShifted && keyboard.lastInitialKey === shiftKey) {
                 _quickPicking = true
                 keyboard.shiftState = ShiftState.LatchedShift
@@ -74,15 +79,5 @@ FunctionKey {
                 keyboard.cycleShift()
             }
         }
-    }
-
-    Rectangle {
-        color: parent.pressed ? Theme.highlightBackgroundColor : Theme.primaryColor
-        visible: attributes.inSymView
-        opacity: parent.pressed ? 0.6 : 0.17
-        radius: geometry.keyRadius
-
-        anchors.fill: parent
-        anchors.margins: Theme.paddingMedium
     }
 }
